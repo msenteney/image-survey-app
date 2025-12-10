@@ -182,6 +182,22 @@
             max-height: 200px;
             overflow-y: auto;
         }
+        
+        .text-input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .input-help {
+            color: #666;
+            font-style: italic;
+            font-size: 12px;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -220,8 +236,9 @@
             <div class="form-section">
                 <h4>📝 Your Response</h4>
                 
+                <!-- Question 1: Is there a data request? -->
                 <div class="question-block">
-                    <label><strong>Is there a data request in this image?</strong></label><br>
+                    <label><strong>1. Is there a data request?</strong></label><br>
                     <div class="radio-group">
                         <input type="radio" name="data_request" value="Yes" id="yes">
                         <label for="yes">Yes</label>
@@ -232,9 +249,28 @@
                     </div>
                 </div>
                 
-                <div id="data-points-section" class="question-block hidden">
-                    <label for="data_points"><strong>How many data points did the government provide?</strong></label><br>
-                    <input type="number" id="data_points" min="0" value="0" style="width: 100px; padding: 5px;">
+                <!-- Question 2: How many data points provided -->
+                <div class="question-block">
+                    <label for="data_points_provided"><strong>2. How many data points did the government provide in their answer?</strong></label><br>
+                    <input type="text" id="data_points_provided" class="text-input" placeholder="Enter number or description (e.g., '5', 'multiple tables', 'see attachment')">
+                    <div class="input-help">You can enter a number or describe the data provided</div>
+                </div>
+                
+                <!-- Question 3: Granularity matching -->
+                <div class="question-block">
+                    <label><strong>3. Did the granularity of the variable's scope (e.g. national instead of state-level data) match between data requested and data provided?</strong></label><br>
+                    <div class="radio-group">
+                        <input type="radio" name="granularity_match" value="Fully matched" id="fully_matched">
+                        <label for="fully_matched">Fully matched</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="granularity_match" value="More granular" id="more_granular">
+                        <label for="more_granular">More granular</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="granularity_match" value="Less granular" id="less_granular">
+                        <label for="less_granular">Less granular</label>
+                    </div>
                 </div>
                 
                 <div class="buttons">
@@ -342,20 +378,26 @@
             // Initialize display
             updateDisplay();
             
-            showAlert('Survey started! Answer the questions and use the buttons to navigate.', 'success');
+            showAlert('Survey started! Answer all three questions and use the buttons to navigate.', 'success');
         }
 
         // Setup event listeners
         function setupEventListeners() {
-            // Show/hide data points question based on radio selection
+            // Auto-save functionality can be added here if needed
+            // For now, just basic change listeners
             document.querySelectorAll('input[name="data_request"]').forEach(radio => {
                 radio.addEventListener('change', function() {
-                    const dataPointsSection = document.getElementById('data-points-section');
-                    if (this.value === 'Yes') {
-                        dataPointsSection.classList.remove('hidden');
-                    } else {
-                        dataPointsSection.classList.add('hidden');
-                    }
+                    // Optional: Add auto-save or other functionality
+                });
+            });
+            
+            document.getElementById('data_points_provided').addEventListener('input', function() {
+                // Optional: Add auto-save functionality
+            });
+            
+            document.querySelectorAll('input[name="granularity_match"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    // Optional: Add auto-save functionality
                 });
             });
         }
@@ -384,10 +426,22 @@
         // Get form data
         function getFormData() {
             const dataRequestRadio = document.querySelector('input[name="data_request"]:checked');
-            const dataPointsInput = document.getElementById('data_points');
+            const dataPointsProvided = document.getElementById('data_points_provided').value.trim();
+            const granularityRadio = document.querySelector('input[name="granularity_match"]:checked');
             
+            // Validate all required fields
             if (!dataRequestRadio) {
                 showAlert('Please answer whether there is a data request.', 'warning');
+                return null;
+            }
+            
+            if (!dataPointsProvided) {
+                showAlert('Please specify how many data points the government provided.', 'warning');
+                return null;
+            }
+            
+            if (!granularityRadio) {
+                showAlert('Please specify whether the granularity matched between request and response.', 'warning');
                 return null;
             }
             
@@ -396,7 +450,8 @@
                 imageName: imageFiles[currentImageIndex] ? imageFiles[currentImageIndex].name : `Image_${currentImageIndex + 1}`,
                 iteration: currentIteration,
                 dataRequest: dataRequestRadio.value,
-                dataPoints: dataRequestRadio.value === 'Yes' ? parseInt(dataPointsInput.value) || 0 : null,
+                dataPointsProvided: dataPointsProvided,
+                granularityMatch: granularityRadio.value,
                 timestamp: new Date().toLocaleString()
             };
         }
@@ -406,8 +461,10 @@
             document.querySelectorAll('input[name="data_request"]').forEach(radio => {
                 radio.checked = false;
             });
-            document.getElementById('data_points').value = 0;
-            document.getElementById('data-points-section').classList.add('hidden');
+            document.getElementById('data_points_provided').value = '';
+            document.querySelectorAll('input[name="granularity_match"]').forEach(radio => {
+                radio.checked = false;
+            });
         }
 
         // Repeat current image
@@ -466,7 +523,8 @@
                             <th>Image Name</th>
                             <th>Response Set</th>
                             <th>Data Request?</th>
-                            <th>Data Points</th>
+                            <th>Data Points Provided</th>
+                            <th>Granularity Match</th>
                             <th>Timestamp</th>
                         </tr>
                     </thead>
@@ -480,7 +538,8 @@
                         <td>${response.imageName}</td>
                         <td>${response.iteration}</td>
                         <td>${response.dataRequest}</td>
-                        <td>${response.dataPoints !== null ? response.dataPoints : 'N/A'}</td>
+                        <td>${response.dataPointsProvided}</td>
+                        <td>${response.granularityMatch}</td>
                         <td>${response.timestamp}</td>
                     </tr>
                 `;
@@ -500,7 +559,7 @@
             }
             
             // Create CSV content
-            const headers = ['Image_Number', 'Image_Name', 'Response_Set', 'Data_Request', 'Data_Points', 'Timestamp'];
+            const headers = ['Image_Number', 'Image_Name', 'Response_Set', 'Data_Request', 'Data_Points_Provided', 'Granularity_Match', 'Timestamp'];
             let csvContent = headers.join(',') + '\n';
             
             responses.forEach(response => {
@@ -509,7 +568,8 @@
                     `"${response.imageName}"`,
                     response.iteration,
                     response.dataRequest,
-                    response.dataPoints !== null ? response.dataPoints : '',
+                    `"${response.dataPointsProvided}"`,
+                    response.granularityMatch,
                     `"${response.timestamp}"`
                 ];
                 csvContent += row.join(',') + '\n';
