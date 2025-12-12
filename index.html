@@ -190,6 +190,12 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+        
+        textarea.text-input {
+            resize: vertical;
+            min-height: 80px;
         }
         
         .input-help {
@@ -273,6 +279,179 @@
                     </div>
                 </div>
                 
+                <!-- Question 4: Temporal unit granularity -->
+                <div class="question-block">
+                    <label><strong>4. Did the granularity of the variable's temporal unit (e.g. annual instead of monthly data) match between data requested and data provided?</strong></label><br>
+                    <div class="radio-group">
+                        <input type="radio" name="temporal_granularity" value="Fully matched" id="temporal_fully_matched">
+                        <label for="temporal_fully_matched">Fully matched</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="temporal_granularity" value="More granular" id="temporal_more_granular">
+                        <label for="temporal_more_granular">More granular</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="temporal_granularity" value="Less granular" id="temporal_less_granular">
+                        <label for="temporal_less_granular">Less granular</label>
+                    </div>
+                </div>
+                
+                <!-- Question 5: Temporal coverage shift -->
+                <div class="question-block">
+                    <label><strong>5. Did the reply shift or redefine the temporal coverage of the data (e.g. provides "data since 2010" when MP asked for "2015–2018")?</strong></label><br>
+                    <div class="radio-group">
+                        <input type="radio" name="temporal_coverage" value="Fully matched" id="temporal_fully">
+                        <label for="temporal_fully">Fully matched</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="temporal_coverage" value="Shifted earlier" id="temporal_earlier">
+                        <label for="temporal_earlier">Shifted earlier</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="temporal_coverage" value="Shifted later" id="temporal_later">
+                        <label for="temporal_later">Shifted later</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="temporal_coverage" value="Government did not state timeframe" id="temporal_gov_no">
+                        <label for="temporal_gov_no">Government did not state timeframe</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="temporal_coverage" value="MP did not state timeframe" id="temporal_mp_no">
+                        <label for="temporal_mp_no">MP did not state timeframe</label>
+                    </div>
+                </div>
+                
+                <!-- Question 6: Baseline of comparison -->
+                <div class="question-block">
+                    <label><strong>6. Did the government change the baseline of comparison in the data provided (e.g., providing percentage instead of absolute number, or different reference year)?</strong></label><br>
+                    <div class="radio-group">
+                        <input type="radio" name="baseline_shift" value="Yes, comparison shifted" id="baseline_yes">
+                        <label for="baseline_yes">Yes, comparison shifted</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="baseline_shift" value="No, comparison did not shift" id="baseline_no">
+                        <label for="baseline_no">No, comparison did not shift</label>
+                    </div>
+                </div>
+                
+                <!-- Question 7: More data than requested -->
+                <div class="question-block">
+                    <label><strong>7. Did the government provide more data than was requested?</strong></label><br>
+                    <div class="radio-group">
+                        <input type="radio" name="more_data" value="Yes" id="more_data_yes">
+                        <label for="more_data_yes">Yes</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="more_data" value="No" id="more_data_no">
+                        <label for="more_data_no">No</label>
+                    </div>
+                </div>
+                
+                <!-- Question 8: All requested variables -->
+                <div class="question-block">
+                    <label><strong>8. Did the government provide data for all requested variables?</strong></label><br>
+                    <div class="radio-group">
+                        <input type="radio" name="all_variables" value="Yes, all variables were accounted for" id="all_vars_yes">
+                        <label for="all_vars_yes">Yes, all variables were accounted for</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="all_variables" value="No, data on some variables were not provided" id="all_vars_no">
+                        <label for="all_vars_no">No, data on some variables were not provided</label>
+                    </div>
+                </div>
+                
+                <!-- Question 9: Variable redefined -->
+                <div class="question-block">
+                    <label><strong>9. In their answer, did the ministry redefine the variable or indicator requested? (e.g., MP asked for "poverty" but answer gives "low-income households")</strong></label><br>
+                    <div class="radio-group">
+                        <input type="radio" name="variable_redefined" value="Yes, variable definition matches" id="var_redef_yes">
+                        <label for="var_redef_yes">Yes, variable definition matches</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="variable_redefined" value="No, variable definition does not match" id="var_redef_no">
+                        <label for="var_redef_no">No, variable definition does not match</label>
+                    </div>
+                </div>
+                
+                <!-- Question 10: What was changed or missing -->
+                <div class="question-block">
+                    <label for="what_changed"><strong>10. What was changed or missing?</strong></label><br>
+                    <input type="text" id="what_changed" class="text-input" placeholder="Enter description of what was changed or missing">
+                </div>
+                
+                <!-- Question 11: All parts answered -->
+                <div class="question-block">
+                    <label><strong>11. Did the government answer all parts of the questions and provide data for all parts?</strong></label><br>
+                    <div class="radio-group">
+                        <input type="radio" name="all_parts" value="Yes, fully answered" id="all_parts_yes">
+                        <label for="all_parts_yes">Yes, fully answered</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="all_parts" value="Partially answered" id="all_parts_partial">
+                        <label for="all_parts_partial">Partially answered</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="all_parts" value="No, not answered at all" id="all_parts_no">
+                        <label for="all_parts_no">No, not answered at all</label>
+                    </div>
+                </div>
+                
+                <!-- Question 12: Thematically answers question -->
+                <div class="question-block">
+                    <label><strong>12. Thematically, does the government's response answer the question?</strong></label><br>
+                    <div class="radio-group">
+                        <input type="radio" name="thematic_answer" value="Yes" id="thematic_yes">
+                        <label for="thematic_yes">Yes</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="thematic_answer" value="No" id="thematic_no">
+                        <label for="thematic_no">No</label>
+                    </div>
+                </div>
+                
+                <!-- Question 13: Justification for withholding -->
+                <div class="question-block">
+                    <label><strong>13. Did the government provide a justification for withholding or altering data?</strong></label><br>
+                    <div class="radio-group">
+                        <input type="radio" name="justification" value="No justification provided" id="just_none">
+                        <label for="just_none">No justification provided</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="justification" value="Yes, citing data availability" id="just_availability">
+                        <label for="just_availability">Yes, citing data availability</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="justification" value="Yes, citing confidentiality" id="just_confidentiality">
+                        <label for="just_confidentiality">Yes, citing confidentiality</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="justification" value="Yes, citing irrelevance" id="just_irrelevance">
+                        <label for="just_irrelevance">Yes, citing irrelevance</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="justification" value="Yes, stating that it can be found in official reports or guidelines" id="just_reports">
+                        <label for="just_reports">Yes, stating that it can be found in official reports or guidelines</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="justification" value="Yes, refer to other authorities" id="just_authorities">
+                        <label for="just_authorities">Yes, refer to other authorities</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="justification" value="Yes, stating that requested breakdown is not how data was collected, thus cannot provide requested breakdown" id="just_breakdown">
+                        <label for="just_breakdown">Yes, stating that requested breakdown is not how data was collected, thus cannot provide requested breakdown</label>
+                    </div>
+                    <div class="radio-group">
+                        <input type="radio" name="justification" value="Other justifications" id="just_other">
+                        <label for="just_other">Other justifications</label>
+                    </div>
+                </div>
+                
+                <!-- Question 14: Other notes -->
+                <div class="question-block">
+                    <label for="other_notes"><strong>14. Any other notes or remarks on this parliamentary exchange.</strong></label><br>
+                    <textarea id="other_notes" class="text-input" rows="4" placeholder="Enter any additional notes or remarks"></textarea>
+                </div>
+                
                 <div class="buttons">
                     <button class="btn-warning" onclick="repeatImage()">🔁 Repeat This Image</button>
                     <button class="btn-primary" onclick="nextImage()">➡️ Next Image</button>
@@ -291,7 +470,7 @@
                 <button class="btn-warning" onclick="resetSurvey()">🔄 Start New Survey</button>
             </div>
             
-            <div id="results-table"></div>
+            <div id="results-table"></div> 
         </div>
         
         <!-- Alert Messages -->
@@ -378,7 +557,7 @@
             // Initialize display
             updateDisplay();
             
-            showAlert('Survey started! Answer all three questions and use the buttons to navigate.', 'success');
+            showAlert('Survey started! Answer all questions and use the buttons to navigate.', 'success');
         }
 
         // Setup event listeners
@@ -428,6 +607,17 @@
             const dataRequestRadio = document.querySelector('input[name="data_request"]:checked');
             const dataPointsProvided = document.getElementById('data_points_provided').value.trim();
             const granularityRadio = document.querySelector('input[name="granularity_match"]:checked');
+            const temporalGranularityRadio = document.querySelector('input[name="temporal_granularity"]:checked');
+            const temporalCoverageRadio = document.querySelector('input[name="temporal_coverage"]:checked');
+            const baselineShiftRadio = document.querySelector('input[name="baseline_shift"]:checked');
+            const moreDataRadio = document.querySelector('input[name="more_data"]:checked');
+            const allVariablesRadio = document.querySelector('input[name="all_variables"]:checked');
+            const variableRedefinedRadio = document.querySelector('input[name="variable_redefined"]:checked');
+            const whatChanged = document.getElementById('what_changed').value.trim();
+            const allPartsRadio = document.querySelector('input[name="all_parts"]:checked');
+            const thematicAnswerRadio = document.querySelector('input[name="thematic_answer"]:checked');
+            const justificationRadio = document.querySelector('input[name="justification"]:checked');
+            const otherNotes = document.getElementById('other_notes').value.trim();
             
             // Validate all required fields
             if (!dataRequestRadio) {
@@ -445,6 +635,51 @@
                 return null;
             }
             
+            if (!temporalGranularityRadio) {
+                showAlert('Please answer question 4 about temporal unit granularity.', 'warning');
+                return null;
+            }
+            
+            if (!temporalCoverageRadio) {
+                showAlert('Please answer question 5 about temporal coverage shift.', 'warning');
+                return null;
+            }
+            
+            if (!baselineShiftRadio) {
+                showAlert('Please answer question 6 about baseline of comparison.', 'warning');
+                return null;
+            }
+            
+            if (!moreDataRadio) {
+                showAlert('Please answer question 7 about whether more data was provided.', 'warning');
+                return null;
+            }
+            
+            if (!allVariablesRadio) {
+                showAlert('Please answer question 8 about all requested variables.', 'warning');
+                return null;
+            }
+            
+            if (!variableRedefinedRadio) {
+                showAlert('Please answer question 9 about variable redefinition.', 'warning');
+                return null;
+            }
+            
+            if (!allPartsRadio) {
+                showAlert('Please answer question 11 about whether all parts were answered.', 'warning');
+                return null;
+            }
+            
+            if (!thematicAnswerRadio) {
+                showAlert('Please answer question 12 about thematic answer.', 'warning');
+                return null;
+            }
+            
+            if (!justificationRadio) {
+                showAlert('Please answer question 13 about justification for withholding data.', 'warning');
+                return null;
+            }
+            
             return {
                 imageIndex: currentImageIndex + 1,
                 imageName: imageFiles[currentImageIndex] ? imageFiles[currentImageIndex].name : `Image_${currentImageIndex + 1}`,
@@ -452,6 +687,17 @@
                 dataRequest: dataRequestRadio.value,
                 dataPointsProvided: dataPointsProvided,
                 granularityMatch: granularityRadio.value,
+                temporalGranularity: temporalGranularityRadio.value,
+                temporalCoverage: temporalCoverageRadio.value,
+                baselineShift: baselineShiftRadio.value,
+                moreData: moreDataRadio.value,
+                allVariables: allVariablesRadio.value,
+                variableRedefined: variableRedefinedRadio.value,
+                whatChanged: whatChanged,
+                allParts: allPartsRadio.value,
+                thematicAnswer: thematicAnswerRadio.value,
+                justification: justificationRadio.value,
+                otherNotes: otherNotes,
                 timestamp: new Date().toLocaleString()
             };
         }
@@ -465,6 +711,35 @@
             document.querySelectorAll('input[name="granularity_match"]').forEach(radio => {
                 radio.checked = false;
             });
+            document.querySelectorAll('input[name="temporal_granularity"]').forEach(radio => {
+                radio.checked = false;
+            });
+            document.querySelectorAll('input[name="temporal_coverage"]').forEach(radio => {
+                radio.checked = false;
+            });
+            document.querySelectorAll('input[name="baseline_shift"]').forEach(radio => {
+                radio.checked = false;
+            });
+            document.querySelectorAll('input[name="more_data"]').forEach(radio => {
+                radio.checked = false;
+            });
+            document.querySelectorAll('input[name="all_variables"]').forEach(radio => {
+                radio.checked = false;
+            });
+            document.querySelectorAll('input[name="variable_redefined"]').forEach(radio => {
+                radio.checked = false;
+            });
+            document.getElementById('what_changed').value = '';
+            document.querySelectorAll('input[name="all_parts"]').forEach(radio => {
+                radio.checked = false;
+            });
+            document.querySelectorAll('input[name="thematic_answer"]').forEach(radio => {
+                radio.checked = false;
+            });
+            document.querySelectorAll('input[name="justification"]').forEach(radio => {
+                radio.checked = false;
+            });
+            document.getElementById('other_notes').value = '';
         }
 
         // Repeat current image
@@ -525,6 +800,17 @@
                             <th>Data Request?</th>
                             <th>Data Points Provided</th>
                             <th>Granularity Match</th>
+                            <th>Temporal Granularity</th>
+                            <th>Temporal Coverage</th>
+                            <th>Baseline Shift</th>
+                            <th>More Data</th>
+                            <th>All Variables</th>
+                            <th>Variable Redefined</th>
+                            <th>What Changed</th>
+                            <th>All Parts</th>
+                            <th>Thematic Answer</th>
+                            <th>Justification</th>
+                            <th>Other Notes</th>
                             <th>Timestamp</th>
                         </tr>
                     </thead>
@@ -540,6 +826,17 @@
                         <td>${response.dataRequest}</td>
                         <td>${response.dataPointsProvided}</td>
                         <td>${response.granularityMatch}</td>
+                        <td>${response.temporalGranularity || ''}</td>
+                        <td>${response.temporalCoverage || ''}</td>
+                        <td>${response.baselineShift || ''}</td>
+                        <td>${response.moreData || ''}</td>
+                        <td>${response.allVariables || ''}</td>
+                        <td>${response.variableRedefined || ''}</td>
+                        <td>${response.whatChanged || ''}</td>
+                        <td>${response.allParts || ''}</td>
+                        <td>${response.thematicAnswer || ''}</td>
+                        <td>${response.justification || ''}</td>
+                        <td>${response.otherNotes || ''}</td>
                         <td>${response.timestamp}</td>
                     </tr>
                 `;
@@ -551,6 +848,16 @@
             showAlert('Survey completed successfully!', 'success');
         }
 
+        // Helper function to properly escape CSV values
+        function escapeCsvValue(value) {
+            if (value === null || value === undefined) {
+                return '""';
+            }
+            const stringValue = String(value);
+            // Escape quotes by doubling them, then wrap in quotes
+            return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+
         // Download results as CSV
         function downloadResults() {
             if (responses.length === 0) {
@@ -559,18 +866,29 @@
             }
             
             // Create CSV content
-            const headers = ['Image_Number', 'Image_Name', 'Response_Set', 'Data_Request', 'Data_Points_Provided', 'Granularity_Match', 'Timestamp'];
+            const headers = ['Image_Number', 'Image_Name', 'Response_Set', 'Data_Request', 'Data_Points_Provided', 'Granularity_Match', 'Temporal_Granularity', 'Temporal_Coverage', 'Baseline_Shift', 'More_Data', 'All_Variables', 'Variable_Redefined', 'What_Changed', 'All_Parts', 'Thematic_Answer', 'Justification', 'Other_Notes', 'Timestamp'];
             let csvContent = headers.join(',') + '\n';
             
             responses.forEach(response => {
                 const row = [
-                    response.imageIndex,
-                    `"${response.imageName}"`,
-                    response.iteration,
-                    response.dataRequest,
-                    `"${response.dataPointsProvided}"`,
-                    response.granularityMatch,
-                    `"${response.timestamp}"`
+                    response.imageIndex, // Number, no quotes needed but we'll quote for consistency
+                    escapeCsvValue(response.imageName),
+                    response.iteration, // Number
+                    escapeCsvValue(response.dataRequest),
+                    escapeCsvValue(response.dataPointsProvided),
+                    escapeCsvValue(response.granularityMatch),
+                    escapeCsvValue(response.temporalGranularity || ''),
+                    escapeCsvValue(response.temporalCoverage || ''),
+                    escapeCsvValue(response.baselineShift || ''),
+                    escapeCsvValue(response.moreData || ''),
+                    escapeCsvValue(response.allVariables || ''),
+                    escapeCsvValue(response.variableRedefined || ''),
+                    escapeCsvValue(response.whatChanged || ''),
+                    escapeCsvValue(response.allParts || ''),
+                    escapeCsvValue(response.thematicAnswer || ''),
+                    escapeCsvValue(response.justification || ''),
+                    escapeCsvValue(response.otherNotes || ''),
+                    escapeCsvValue(response.timestamp)
                 ];
                 csvContent += row.join(',') + '\n';
             });
