@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image & PDF Survey</title>
+    <title>Image & PDF Survey with Save Progress</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -27,6 +27,38 @@
             margin-bottom: 20px;
             text-align: center;
             font-weight: bold;
+        }
+        
+        .progress-visual {
+            width: 100%;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #28a745;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+        
+        .save-load-section {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .save-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 15px 0;
         }
         
         .image-container { 
@@ -56,15 +88,42 @@
         }
         
         .pdf-fallback {
-            padding: 20px;
+            padding: 15px;
             background: #e9ecef;
             border-radius: 8px;
             text-align: center;
+            margin-top: 10px;
         }
         
         .pdf-fallback a {
             color: #007bff;
             font-weight: bold;
+            text-decoration: none;
+        }
+        
+        .pdf-fallback a:hover {
+            text-decoration: underline;
+        }
+        
+        .conditional-questions {
+            transition: opacity 0.3s ease, max-height 0.3s ease;
+        }
+        
+        .conditional-questions.hidden-conditional {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        
+        .conditional-questions.hidden-conditional::before {
+            content: "Questions 2-14 are not applicable when there is no data request";
+            display: block;
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-align: center;
         }
         
         .form-section { 
@@ -107,12 +166,18 @@
             font-size: 14px;
             font-weight: bold;
             transition: all 0.3s ease;
-            min-width: 150px;
+            min-width: 120px;
         }
         
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
         
         .btn-warning { 
@@ -132,6 +197,16 @@
         
         .btn-info {
             background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
             color: white;
         }
         
@@ -184,6 +259,12 @@
             border: 1px solid #ffeaa7;
         }
         
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
         .file-input {
             margin: 20px 0;
             padding: 15px;
@@ -225,19 +306,78 @@
             font-size: 12px;
             margin-top: 5px;
         }
+        
+        .load-progress-section {
+            background: #d1ecf1;
+            border: 2px solid #17a2b8;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .session-info {
+            background: #e2e3e5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .auto-save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .auto-save-indicator.saving {
+            background: #ffc107;
+            color: #212529;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📊 Image & PDF Response Survey</h1>
         
-        <!-- File Upload Section -->
+        <!-- Auto-save indicator -->
+        <div id="auto-save-indicator" class="auto-save-indicator hidden">
+            ✓ Progress Saved
+        </div>
+        
+        <!-- Load Previous Progress Section -->
+        <div id="load-progress-section" class="load-progress-section">
+            <h3>📂 Load Previous Progress</h3>
+            <p>If you have a previous session file, you can continue where you left off:</p>
+            <input type="file" id="progress-file" accept=".json">
+            <button class="btn-info" onclick="loadProgress()">Load Previous Session</button>
+            
+            <div id="progress-info" class="session-info hidden">
+                <strong>Session Information:</strong><br>
+                <span id="session-details"></span>
+            </div>
+        </div>
+        
+        <!-- Start New Session Section -->
+        <div id="new-session-section" class="save-load-section" style="background: #d1ecf1; border-color: #17a2b8;">
+            <h3>🆕 Start New Session</h3>
+            <p>Begin a fresh survey session. This will clear any saved progress.</p>
+            <button class="btn-primary" onclick="startNewSession()">Start New Session</button>
+        </div>
+        
+        <!-- Image Upload Section -->
         <div id="setup-section">
             <div class="file-input">
-                <h3>🖼️📄 Load Your Images & PDFs</h3>
+                <h3>🖼️ Load Your Images & PDFs</h3>
                 <p>Select multiple images or PDF files from your computer:</p>
                 <input type="file" id="image-files" multiple accept="image/*,.pdf,application/pdf">
-                <button class="btn-primary" onclick="loadFiles()">Load Files</button>
+                <button class="btn-primary" onclick="loadImages()">Load Files</button>
                 
                 <div id="image-list" class="hidden">
                     <h4>Loaded Files:</h4>
@@ -248,17 +388,40 @@
             </div>
         </div>
         
+        <!-- Save/Load Progress Controls -->
+        <div id="save-load-controls" class="save-load-section hidden">
+            <h4>💾 Save & Load Progress</h4>
+            <p><strong>Manual Save Only:</strong> Click "Save Progress Now" to save your current position. Export session file to save with images.</p>
+            
+            <div class="save-buttons">
+                <button class="btn-secondary" onclick="saveProgressManual()">💾 Save Progress Now</button>
+                <button class="btn-info" onclick="exportSession()">📤 Export Session File</button>
+                <button class="btn-warning" onclick="clearProgress()">🗑️ Clear Saved Progress</button>
+            </div>
+            
+            <div class="session-info">
+                <strong>Current Session:</strong><br>
+                <span id="current-session-info">No active session</span>
+            </div>
+        </div>
+        
         <!-- Progress Bar -->
         <div id="progress" class="progress-bar hidden">
-            <span id="progress-text">Image 1 of 0, Response Set 1</span>
+            <div id="progress-text">Image 1 of 0, Response Set 1</div>
+            <div class="progress-visual">
+                <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div id="completion-stats">0% Complete • 0 responses collected</div>
         </div>
         
         <!-- Survey Section -->
         <div id="survey-section" class="hidden">
             <div class="image-container">
-                <h3 id="image-title">File 1 - Response Set 1</h3>
-                <div id="file-display">
-                    <img id="current-image" src="" alt="Survey Image" onerror="handleImageError()">
+                <h3 id="image-title">Image 1 - Response Set 1</h3>
+                <img id="current-image" src="" alt="Survey Image" onerror="handleImageError()">
+                <iframe id="current-pdf" src="" style="display: none;" title="Survey PDF"></iframe>
+                <div id="pdf-fallback" class="pdf-fallback" style="display: none;">
+                    <p>If the PDF doesn't display properly, <a id="pdf-new-tab-link" href="#" target="_blank" rel="noopener">click here to open it in a new tab</a></p>
                 </div>
             </div>
             
@@ -277,6 +440,9 @@
                         <label for="no">No</label>
                     </div>
                 </div>
+                
+                <!-- Conditional questions container (shown only when data_request = Yes) -->
+                <div id="conditional-questions" class="conditional-questions">
                 
                 <!-- Question 2: How many data points provided -->
                 <div class="question-block">
@@ -475,10 +641,18 @@
                     <textarea id="other_notes" class="text-input" rows="4" placeholder="Enter any additional notes or remarks"></textarea>
                 </div>
                 
+                </div><!-- End of conditional-questions -->
+                
                 <div class="buttons">
                     <button class="btn-warning" onclick="repeatImage()">🔁 Repeat This File</button>
                     <button class="btn-primary" onclick="nextImage()">➡️ Next File</button>
                     <button class="btn-success" onclick="finishSurvey()">✅ Finish Survey</button>
+                </div>
+                
+                <!-- Quick navigation -->
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="btn-secondary" onclick="goToPreviousImage()" id="prev-btn">⬅️ Previous File</button>
+                    <button class="btn-secondary" onclick="jumpToImage()" style="margin: 0 10px;">🔍 Jump to File...</button>
                 </div>
             </div>
         </div>
@@ -490,10 +664,11 @@
             
             <div class="buttons">
                 <button class="btn-info" onclick="downloadResults()">📥 Download CSV</button>
+                <button class="btn-secondary" onclick="exportSession()">📤 Export Session</button>
                 <button class="btn-warning" onclick="resetSurvey()">🔄 Start New Survey</button>
             </div>
             
-            <div id="results-table"></div> 
+            <div id="results-table"></div>
         </div>
         
         <!-- Alert Messages -->
@@ -509,14 +684,189 @@
         let currentIteration = 1;
         let responses = [];
         let surveyStarted = false;
+        let sessionId = null;
+        let autoSaveInterval = null;
+        let loadingForSessionFile = false; // Flag to track if loading images for a session file
 
-        // Load files (images and PDFs) from file input
-        function loadFiles() {
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            generateSessionId();
+            checkForSavedProgress();
+            showAlert('Welcome! Load images to start, or continue a previous session.', 'info');
+        });
+
+        // Start a new session
+        function startNewSession() {
+            if (confirm('Are you sure you want to start a new session? This will clear any saved progress in your browser.')) {
+                // Reset all variables
+                imageFiles = [];
+                imageDataUrls = [];
+                fileTypes = [];
+                currentImageIndex = 0;
+                currentIteration = 1;
+                responses = [];
+                surveyStarted = false;
+                loadingForSessionFile = false;
+                if (window.pendingSessionRestore) {
+                    delete window.pendingSessionRestore;
+                }
+                if (window.pendingFormState) {
+                    delete window.pendingFormState;
+                }
+                
+                // Generate new session ID
+                generateSessionId();
+                
+                // Clear localStorage
+                localStorage.removeItem('imageSurveyProgress');
+                stopAutoSave();
+                
+                // Reset UI to initial state
+                document.getElementById('load-progress-section').classList.remove('hidden');
+                document.getElementById('setup-section').classList.remove('hidden');
+                document.getElementById('save-load-controls').classList.add('hidden');
+                document.getElementById('progress').classList.add('hidden');
+                document.getElementById('survey-section').classList.add('hidden');
+                document.getElementById('results-section').classList.add('hidden');
+                document.getElementById('image-list').classList.add('hidden');
+                document.getElementById('start-survey-btn').classList.add('hidden');
+                document.getElementById('progress-info').classList.add('hidden');
+                document.getElementById('image-files').value = '';
+                document.getElementById('progress-file').value = '';
+                
+                // Clear form
+                clearForm();
+                
+                showAlert('New session started! Please load images to begin.', 'success');
+            }
+        }
+
+        // Generate unique session ID
+        function generateSessionId() {
+            sessionId = 'survey_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Check for existing saved progress
+        function checkForSavedProgress() {
+            const savedProgress = localStorage.getItem('imageSurveyProgress');
+            if (savedProgress) {
+                try {
+                    const progressData = JSON.parse(savedProgress);
+                    // Hide image upload section since we have saved progress
+                    document.getElementById('setup-section').classList.add('hidden');
+                    document.getElementById('progress-info').classList.remove('hidden');
+                    document.getElementById('session-details').innerHTML = `
+                        Session ID: ${progressData.sessionId}<br>
+                        Date: ${new Date(progressData.timestamp).toLocaleString()}<br>
+                        Images: ${progressData.totalImages} (will need to be reloaded)<br>
+                        Current Position: Image ${progressData.currentImageIndex + 1}<br>
+                        Responses: ${progressData.responses ? progressData.responses.length : 0} collected<br>
+                        <br><strong>Note:</strong> Images are not saved in browser storage. You'll need to reload them to continue.<br>
+                        <br>
+                        <button class="btn-success" onclick="continueFromSaved()">Continue This Session</button>
+                        <button class="btn-warning" onclick="startNewSession()" style="margin-left: 10px;">Start New Session Instead</button>
+                    `;
+                    showAlert('Found previous session! Note: You will need to reload images to continue.', 'info');
+                } catch (error) {
+                    console.error('Error parsing saved progress:', error);
+                    localStorage.removeItem('imageSurveyProgress');
+                }
+            }
+        }
+
+        // Continue from saved progress
+        function continueFromSaved() {
+            const savedProgress = localStorage.getItem('imageSurveyProgress');
+            if (!savedProgress) {
+                showAlert('No saved progress found.', 'warning');
+                return;
+            }
+
+            try {
+                const progressData = JSON.parse(savedProgress);
+                
+                // Restore session data
+                sessionId = progressData.sessionId;
+                currentImageIndex = progressData.currentImageIndex;
+                currentIteration = progressData.currentIteration;
+                responses = progressData.responses || [];
+                // Image data URLs are not saved to localStorage to avoid storage limits
+                imageDataUrls = progressData.imageDataUrls || [];
+                
+                // Recreate image files info
+                imageFiles = progressData.imageFiles ? progressData.imageFiles.map(fileInfo => ({
+                    name: fileInfo.name,
+                    size: fileInfo.size,
+                    type: fileInfo.type
+                })) : [];
+
+                if (imageDataUrls.length === 0) {
+                    // Images need to be reloaded - show image upload section
+                    // Store session data temporarily so we can restore it after images load
+                    window.pendingSessionRestore = {
+                        sessionId: sessionId,
+                        currentImageIndex: currentImageIndex,
+                        currentIteration: currentIteration,
+                        responses: responses
+                    };
+                    document.getElementById('setup-section').classList.remove('hidden');
+                    showAlert('Session found, but images need to be reloaded. Please select the same images again.', 'warning');
+                    updateSessionInfo();
+                    return;
+                }
+
+                // Images are available - start survey from saved position
+                startSurveyFromSaved();
+                showAlert(`Session restored! Continuing from Image ${currentImageIndex + 1}`, 'success');
+                
+            } catch (error) {
+                console.error('Error restoring progress:', error);
+                showAlert('Error restoring session. Please start fresh.', 'warning');
+                clearProgress();
+                // Show image upload section if error occurs
+                document.getElementById('setup-section').classList.remove('hidden');
+            }
+        }
+
+        // Start survey from saved state
+        function startSurveyFromSaved() {
+            surveyStarted = true;
+            
+            // Show appropriate sections
+            document.getElementById('load-progress-section').classList.add('hidden');
+            document.getElementById('setup-section').classList.add('hidden');
+            document.getElementById('save-load-controls').classList.remove('hidden');
+            document.getElementById('progress').classList.remove('hidden');
+            document.getElementById('survey-section').classList.remove('hidden');
+            
+            // Setup and update display
+            setupEventListeners();
+            updateDisplay();
+            
+            // Try to restore form state from localStorage
+            try {
+                const savedProgress = localStorage.getItem('imageSurveyProgress');
+                if (savedProgress) {
+                    const progressData = JSON.parse(savedProgress);
+                    if (progressData.currentFormState) {
+                        restoreFormState(progressData.currentFormState);
+                    }
+                }
+            } catch (error) {
+                console.error('Error restoring form state:', error);
+            }
+            
+            updateSessionInfo();
+            startAutoSave();
+        }
+
+        // Load images from file input
+        function loadImages() {
             const fileInput = document.getElementById('image-files');
             const files = fileInput.files;
             
             if (files.length === 0) {
-                showAlert('Please select at least one image or PDF file.', 'warning');
+                showAlert('Please select at least one file.', 'warning');
                 return;
             }
             
@@ -531,16 +881,18 @@
             // Process each file
             imageFiles.forEach((file, index) => {
                 const reader = new FileReader();
+                
+                // Determine file type
                 const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
                 fileTypes[index] = isPdf ? 'pdf' : 'image';
                 
                 reader.onload = function(e) {
                     imageDataUrls[index] = e.target.result;
                     
-                    // Add to display list with file type indicator
+                    // Add to display list
                     const listItem = document.createElement('li');
-                    const typeIcon = isPdf ? '📄' : '🖼️';
-                    listItem.textContent = `${index + 1}. ${typeIcon} ${file.name}`;
+                    const typeLabel = isPdf ? '📄 PDF' : '🖼️ Image';
+                    listItem.textContent = `${index + 1}. ${file.name} (${typeLabel})`;
                     imagesList.appendChild(listItem);
                     
                     filesProcessed++;
@@ -548,10 +900,40 @@
                     // When all files are processed
                     if (filesProcessed === imageFiles.length) {
                         document.getElementById('image-list').classList.remove('hidden');
-                        document.getElementById('start-survey-btn').classList.remove('hidden');
-                        const pdfCount = fileTypes.filter(t => t === 'pdf').length;
-                        const imageCount = fileTypes.filter(t => t === 'image').length;
-                        showAlert(`Successfully loaded ${imageCount} image(s) and ${pdfCount} PDF(s)!`, 'success');
+                        
+                        // Verify we have all the image data URLs
+                        if (imageDataUrls.length === imageFiles.length) {
+                            // Don't auto-save - user must manually save to avoid storage issues
+                            
+                            // Check if we have a pending session restore (from continueFromSaved)
+                            if (window.pendingSessionRestore) {
+                                // Restore the session data
+                                sessionId = window.pendingSessionRestore.sessionId;
+                                currentImageIndex = window.pendingSessionRestore.currentImageIndex;
+                                currentIteration = window.pendingSessionRestore.currentIteration;
+                                responses = window.pendingSessionRestore.responses;
+                                delete window.pendingSessionRestore;
+                                
+                                // Auto-continue from saved position
+                                showAlert(`Successfully loaded ${imageFiles.length} images! Restoring session...`, 'success');
+                                setTimeout(() => {
+                                    startSurveyFromSaved();
+                                }, 1000);
+                            } else if (!loadingForSessionFile) {
+                                // New session - auto-start
+                                showAlert(`Successfully loaded ${imageFiles.length} images! Starting survey...`, 'success');
+                                
+                                // Automatically start the survey after a brief delay to ensure UI updates
+                                setTimeout(() => {
+                                    startSurvey();
+                                }, 1000);
+                            } else {
+                                // Loading for session file - wait for user to click Apply
+                                showAlert(`Successfully loaded ${imageFiles.length} images! Now click "Apply This Session" to continue.`, 'success');
+                            }
+                        } else {
+                            showAlert('Error: Not all images loaded successfully. Please try again.', 'warning');
+                        }
                     }
                 };
                 
@@ -563,94 +945,101 @@
                 reader.readAsDataURL(file);
             });
         }
-        
-        // Alias for backwards compatibility
-        function loadImages() {
-            loadFiles();
-        }
 
         // Start the survey
         function startSurvey() {
             if (imageDataUrls.length === 0) {
-                showAlert('Please load files first.', 'warning');
+                showAlert('Please load images first.', 'warning');
                 return;
             }
             
             surveyStarted = true;
             currentImageIndex = 0;
             currentIteration = 1;
-            responses = [];
             
             // Hide setup, show survey
+            document.getElementById('load-progress-section').classList.add('hidden');
             document.getElementById('setup-section').classList.add('hidden');
+            document.getElementById('save-load-controls').classList.remove('hidden');
             document.getElementById('progress').classList.remove('hidden');
             document.getElementById('survey-section').classList.remove('hidden');
             
+            // Clear form for fresh start
+            clearForm();
+            
             // Setup event listeners
             setupEventListeners();
-            
-            // Initialize display
             updateDisplay();
+            updateSessionInfo();
             
-            showAlert('Survey started! Answer all questions and use the buttons to navigate.', 'success');
+            // Auto-save disabled to avoid storage issues
+            startAutoSave();
+            
+            // Don't auto-save - user must manually save
+            // saveProgress();
+            
+            showAlert('Survey started! Use "Save Progress Now" button to save your position.', 'success');
         }
 
         // Setup event listeners
         function setupEventListeners() {
-            // Auto-save functionality can be added here if needed
-            // For now, just basic change listeners
-            document.querySelectorAll('input[name="data_request"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    // Optional: Add auto-save or other functionality
-                });
+            // Add event listeners for Question 1 to show/hide conditional questions
+            const dataRequestRadios = document.querySelectorAll('input[name="data_request"]');
+            dataRequestRadios.forEach(radio => {
+                radio.addEventListener('change', handleDataRequestChange);
             });
             
-            document.getElementById('data_points_provided').addEventListener('input', function() {
-                // Optional: Add auto-save functionality
-            });
+            // Initialize visibility based on current state
+            handleDataRequestChange();
+        }
+        
+        // Handle Question 1 change - show/hide conditional questions
+        function handleDataRequestChange() {
+            const dataRequestRadio = document.querySelector('input[name="data_request"]:checked');
+            const conditionalQuestions = document.getElementById('conditional-questions');
             
-            document.querySelectorAll('input[name="granularity_match"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    // Optional: Add auto-save functionality
-                });
-            });
+            if (dataRequestRadio && dataRequestRadio.value === 'No') {
+                // Hide questions 2-14
+                conditionalQuestions.classList.add('hidden-conditional');
+            } else {
+                // Show questions 2-14 (including when nothing is selected yet)
+                conditionalQuestions.classList.remove('hidden-conditional');
+            }
         }
 
         // Update display
         function updateDisplay() {
             if (!surveyStarted || imageDataUrls.length === 0) return;
             
-            const fileDisplayContainer = document.getElementById('file-display');
-            const currentFileType = fileTypes[currentImageIndex];
-            const currentFileName = imageFiles[currentImageIndex] ? imageFiles[currentImageIndex].name : `File_${currentImageIndex + 1}`;
-            
-            // Clear previous content
-            fileDisplayContainer.innerHTML = '';
+            // Update image or PDF display
+            const imageElement = document.getElementById('current-image');
+            const pdfElement = document.getElementById('current-pdf');
+            const pdfFallback = document.getElementById('pdf-fallback');
+            const pdfNewTabLink = document.getElementById('pdf-new-tab-link');
+            const currentFileType = fileTypes[currentImageIndex] || 'image';
             
             if (currentFileType === 'pdf') {
-                // Display PDF using embed element
-                const embed = document.createElement('embed');
-                embed.src = imageDataUrls[currentImageIndex];
-                embed.type = 'application/pdf';
-                embed.id = 'current-pdf';
-                fileDisplayContainer.appendChild(embed);
+                // Show PDF, hide image
+                imageElement.style.display = 'none';
+                pdfElement.style.display = 'block';
+                pdfFallback.style.display = 'block';
+                pdfElement.src = imageDataUrls[currentImageIndex];
                 
-                // Create blob URL for fallback link (works better in new tabs)
-                const pdfBlobUrl = URL.createObjectURL(imageFiles[currentImageIndex]);
-                
-                // Add fallback link
-                const fallback = document.createElement('div');
-                fallback.className = 'pdf-fallback';
-                fallback.innerHTML = `<p>If the PDF doesn't display, <a href="${pdfBlobUrl}" target="_blank" rel="noopener">click here to open it in a new tab</a></p>`;
-                fileDisplayContainer.appendChild(fallback);
+                // Create blob URL for opening PDF in new tab (works better than data URL)
+                // Check if we have the original file object available
+                if (imageFiles[currentImageIndex] && imageFiles[currentImageIndex] instanceof File) {
+                    const pdfBlobUrl = URL.createObjectURL(imageFiles[currentImageIndex]);
+                    pdfNewTabLink.href = pdfBlobUrl;
+                } else {
+                    // Fallback to data URL if file object not available
+                    pdfNewTabLink.href = imageDataUrls[currentImageIndex];
+                }
             } else {
-                // Display image
-                const img = document.createElement('img');
-                img.src = imageDataUrls[currentImageIndex];
-                img.alt = 'Survey Image';
-                img.id = 'current-image';
-                img.onerror = handleImageError;
-                fileDisplayContainer.appendChild(img);
+                // Show image, hide PDF and fallback
+                imageElement.style.display = 'block';
+                pdfElement.style.display = 'none';
+                pdfFallback.style.display = 'none';
+                imageElement.src = imageDataUrls[currentImageIndex];
             }
             
             // Update titles
@@ -658,17 +1047,88 @@
             document.getElementById('image-title').textContent = 
                 `${fileTypeLabel} ${currentImageIndex + 1} - Response Set ${currentIteration}`;
             
+            // Update progress
+            const progressPercent = ((currentImageIndex / imageDataUrls.length) * 100).toFixed(1);
             document.getElementById('progress-text').textContent = 
-                `File ${currentImageIndex + 1} of ${imageDataUrls.length}, Response Set ${currentIteration}, Total Responses: ${responses.length}`;
+                `File ${currentImageIndex + 1} of ${imageDataUrls.length}, Response Set ${currentIteration}`;
+            
+            document.getElementById('completion-stats').textContent = 
+                `${progressPercent}% Complete • ${responses.length} responses collected`;
+            
+            document.getElementById('progress-fill').style.width = `${progressPercent}%`;
+            
+            // Update navigation buttons
+            document.getElementById('prev-btn').disabled = currentImageIndex === 0;
+            
+            // Update session info
+            updateSessionInfo();
         }
 
-        // Handle image loading errors
-        function handleImageError() {
-            showAlert('Error loading current file. Please check the file.', 'warning');
+        // Update session information display
+        function updateSessionInfo() {
+            const sessionInfo = document.getElementById('current-session-info');
+            if (sessionInfo) {
+                const pdfCount = fileTypes.filter(t => t === 'pdf').length;
+                const imageCount = fileTypes.filter(t => t === 'image').length;
+                sessionInfo.innerHTML = `
+                    Session ID: ${sessionId}<br>
+                    Started: ${new Date().toLocaleString()}<br>
+                    Files Loaded: ${imageDataUrls.length} (${imageCount} images, ${pdfCount} PDFs)<br>
+                    Current Position: File ${currentImageIndex + 1}<br>
+                    Responses Collected: ${responses.length}<br>
+                    <strong>Save Status:</strong> Manual save only (click "Save Progress Now" to save)
+                `;
+            }
         }
 
-        // Get form data
-        function getFormData() {
+        // Auto-save functionality - DISABLED to avoid storage issues
+        function startAutoSave() {
+            // Auto-save disabled - user must manually save
+            // This prevents storage full errors with many images
+        }
+
+        function stopAutoSave() {
+            // Auto-save disabled
+        }
+
+        // Save progress to localStorage (without image data to avoid storage limits)
+        function saveProgress(silent = false) {
+            const progressData = {
+                sessionId: sessionId,
+                timestamp: Date.now(),
+                currentImageIndex: currentImageIndex,
+                currentIteration: currentIteration,
+                responses: responses,
+                // Don't save imageDataUrls to localStorage - they take too much space
+                // Images will need to be reloaded when continuing from saved progress
+                totalImages: imageDataUrls.length,
+                imageFiles: imageFiles.map(file => ({
+                    name: file.name,
+                    size: file.size,
+                    type: file.type
+                })),
+                // Save current form state
+                currentFormState: getCurrentFormState(),
+                note: "Image data not saved to browser storage. Export session file to save images."
+            };
+            
+            try {
+                localStorage.setItem('imageSurveyProgress', JSON.stringify(progressData));
+                
+                if (!silent) {
+                    showAutoSaveIndicator('✓ Progress Saved');
+                    updateSessionInfo();
+                }
+            } catch (error) {
+                console.error('Error saving progress:', error);
+                if (!silent) {
+                    showAlert('Error saving progress. Storage may be full.', 'warning');
+                }
+            }
+        }
+
+        // Get current form state
+        function getCurrentFormState() {
             const dataRequestRadio = document.querySelector('input[name="data_request"]:checked');
             const dataPointsProvided = document.getElementById('data_points_provided').value.trim();
             const granularityRadio = document.querySelector('input[name="granularity_match"]:checked');
@@ -684,12 +1144,388 @@
             const justificationRadio = document.querySelector('input[name="justification"]:checked');
             const otherNotes = document.getElementById('other_notes').value.trim();
             
-            // Validate all required fields
+            return {
+                dataRequest: dataRequestRadio ? dataRequestRadio.value : null,
+                dataPointsProvided: dataPointsProvided || '',
+                granularityMatch: granularityRadio ? granularityRadio.value : null,
+                temporalGranularity: temporalGranularityRadio ? temporalGranularityRadio.value : null,
+                temporalCoverage: temporalCoverageRadio ? temporalCoverageRadio.value : null,
+                baselineShift: baselineShiftRadio ? baselineShiftRadio.value : null,
+                moreData: moreDataRadio ? moreDataRadio.value : null,
+                allVariables: allVariablesRadio ? allVariablesRadio.value : null,
+                variableRedefined: variableRedefinedRadio ? variableRedefinedRadio.value : null,
+                whatChanged: whatChanged || '',
+                allParts: allPartsRadio ? allPartsRadio.value : null,
+                thematicAnswer: thematicAnswerRadio ? thematicAnswerRadio.value : null,
+                justification: justificationRadio ? justificationRadio.value : null,
+                otherNotes: otherNotes || ''
+            };
+        }
+
+        // Restore form state
+        function restoreFormState(formState) {
+            if (!formState) return;
+            
+            if (formState.dataRequest) {
+                const radio = document.querySelector(`input[name="data_request"][value="${formState.dataRequest}"]`);
+                if (radio) {
+                    radio.checked = true;
+                }
+            }
+            
+            if (formState.dataPointsProvided) {
+                document.getElementById('data_points_provided').value = formState.dataPointsProvided;
+            }
+            
+            if (formState.granularityMatch) {
+                const radio = document.querySelector(`input[name="granularity_match"][value="${formState.granularityMatch}"]`);
+                if (radio) radio.checked = true;
+            }
+            
+            if (formState.temporalGranularity) {
+                const radio = document.querySelector(`input[name="temporal_granularity"][value="${formState.temporalGranularity}"]`);
+                if (radio) radio.checked = true;
+            }
+            
+            if (formState.temporalCoverage) {
+                const radio = document.querySelector(`input[name="temporal_coverage"][value="${formState.temporalCoverage}"]`);
+                if (radio) radio.checked = true;
+            }
+            
+            if (formState.baselineShift) {
+                const radio = document.querySelector(`input[name="baseline_shift"][value="${formState.baselineShift}"]`);
+                if (radio) radio.checked = true;
+            }
+            
+            if (formState.moreData) {
+                const radio = document.querySelector(`input[name="more_data"][value="${formState.moreData}"]`);
+                if (radio) radio.checked = true;
+            }
+            
+            if (formState.allVariables) {
+                const radio = document.querySelector(`input[name="all_variables"][value="${formState.allVariables}"]`);
+                if (radio) radio.checked = true;
+            }
+            
+            if (formState.variableRedefined) {
+                const radio = document.querySelector(`input[name="variable_redefined"][value="${formState.variableRedefined}"]`);
+                if (radio) radio.checked = true;
+            }
+            
+            if (formState.whatChanged) {
+                document.getElementById('what_changed').value = formState.whatChanged;
+            }
+            
+            if (formState.allParts) {
+                const radio = document.querySelector(`input[name="all_parts"][value="${formState.allParts}"]`);
+                if (radio) radio.checked = true;
+            }
+            
+            if (formState.thematicAnswer) {
+                const radio = document.querySelector(`input[name="thematic_answer"][value="${formState.thematicAnswer}"]`);
+                if (radio) radio.checked = true;
+            }
+            
+            if (formState.justification) {
+                const radio = document.querySelector(`input[name="justification"][value="${formState.justification}"]`);
+                if (radio) radio.checked = true;
+            }
+            
+            if (formState.otherNotes) {
+                document.getElementById('other_notes').value = formState.otherNotes;
+            }
+        }
+
+        // Manual save progress
+        function saveProgressManual() {
+            saveProgress();
+            showAlert('Progress saved manually!', 'success');
+        }
+
+        // Export session as file
+        function exportSession() {
+            const progressData = {
+                sessionId: sessionId,
+                timestamp: Date.now(),
+                currentImageIndex: currentImageIndex,
+                currentIteration: currentIteration,
+                responses: responses,
+                totalImages: imageDataUrls.length,
+                imageFiles: imageFiles.map(file => ({
+                    name: file.name,
+                    size: file.size,
+                    type: file.type
+                })),
+                // Include image data URLs so images can be restored automatically
+                imageDataUrls: imageDataUrls,
+                // Include file types (image vs pdf)
+                fileTypes: fileTypes,
+                // Include current form state if available
+                currentFormState: getCurrentFormState(),
+                note: "This file contains all image/PDF data. You can continue directly without reloading files."
+            };
+            
+            const dataStr = JSON.stringify(progressData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `survey_session_${sessionId}_${new Date().toISOString().slice(0, 10)}.json`;
+            link.click();
+            
+            showAlert('Session exported! All images are included and will be restored automatically.', 'success');
+        }
+
+        // Load progress from file
+        function loadProgress() {
+            const fileInput = document.getElementById('progress-file');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showAlert('Please select a session file.', 'warning');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const progressData = JSON.parse(e.target.result);
+                    
+                    // Validate the file
+                    if (!progressData.sessionId || !progressData.responses) {
+                        throw new Error('Invalid session file format');
+                    }
+                    
+                    // Restore data
+                    sessionId = progressData.sessionId;
+                    currentImageIndex = progressData.currentImageIndex || 0;
+                    currentIteration = progressData.currentIteration || 1;
+                    responses = progressData.responses || [];
+                    
+                    // Check if image data URLs are included in the session file
+                    if (progressData.imageDataUrls && progressData.imageDataUrls.length > 0) {
+                        // Images are included - restore them automatically
+                        imageDataUrls = progressData.imageDataUrls;
+                        fileTypes = progressData.fileTypes || [];
+                        imageFiles = progressData.imageFiles ? progressData.imageFiles.map(fileInfo => ({
+                            name: fileInfo.name,
+                            size: fileInfo.size,
+                            type: fileInfo.type
+                        })) : [];
+                        
+                        // If fileTypes not saved, derive from file info
+                        if (fileTypes.length === 0 && imageFiles.length > 0) {
+                            fileTypes = imageFiles.map(file => 
+                                file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf') ? 'pdf' : 'image'
+                            );
+                        }
+                        
+                        // Store form state for restoration after applying
+                        if (progressData.currentFormState) {
+                            window.pendingFormState = progressData.currentFormState;
+                        }
+                        
+                        // Hide image upload section since images are already loaded
+                        document.getElementById('setup-section').classList.add('hidden');
+                        
+                        // Show session info with auto-continue option
+                        document.getElementById('progress-info').classList.remove('hidden');
+                        document.getElementById('session-details').innerHTML = `
+                            Session ID: ${progressData.sessionId}<br>
+                            Original Date: ${new Date(progressData.timestamp).toLocaleString()}<br>
+                            Images: ${progressData.totalImages} (restored from file)<br>
+                            Position: Image ${currentImageIndex + 1} of ${progressData.totalImages}<br>
+                            Responses: ${responses.length} collected<br>
+                            <br><strong>All images have been restored!</strong><br>
+                            <button class="btn-success" onclick="applyLoadedProgress()" style="margin-top: 10px;">Continue This Session</button>
+                        `;
+                        
+                        showAlert('Session file loaded! All images restored. Click "Continue This Session" to proceed.', 'success');
+                    } else {
+                        // Images not included - user needs to load them
+                        imageDataUrls = [];
+                        imageFiles = [];
+                        
+                        // Hide image upload section - user will need to load images before applying
+                        document.getElementById('setup-section').classList.add('hidden');
+                        
+                        // Show session info
+                        document.getElementById('progress-info').classList.remove('hidden');
+                        document.getElementById('session-details').innerHTML = `
+                            Session ID: ${progressData.sessionId}<br>
+                            Original Date: ${new Date(progressData.timestamp).toLocaleString()}<br>
+                            Images Expected: ${progressData.totalImages}<br>
+                            Position: Image ${currentImageIndex + 1}<br>
+                            Responses: ${responses.length} collected<br>
+                            <br><strong>Note:</strong> This session file doesn't include image data. You need to reload the same ${progressData.totalImages} images to continue.<br>
+                            <button class="btn-primary" onclick="showImageUploadForSession()" style="margin-top: 10px;">Load Images</button>
+                            <button class="btn-success" onclick="applyLoadedProgress()" style="margin-top: 10px; margin-left: 10px;">Apply This Session</button>
+                        `;
+                        
+                        showAlert('Session file loaded! Click "Load Images" to reload the images, then click "Apply This Session".', 'success');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error loading session:', error);
+                    showAlert('Error reading session file. Please check the file format.', 'warning');
+                    // Show image upload section if error occurs
+                    document.getElementById('setup-section').classList.remove('hidden');
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+
+        // Show image upload section for session file loading
+        function showImageUploadForSession() {
+            loadingForSessionFile = true; // Set flag to prevent auto-start
+            document.getElementById('setup-section').classList.remove('hidden');
+            showAlert('Please load the same images that were used in this session.', 'info');
+        }
+
+        // Apply loaded progress
+        function applyLoadedProgress() {
+            if (imageDataUrls.length === 0) {
+                showAlert('Please load images first before applying the session. Click "Load Images" button.', 'warning');
+                return;
+            }
+            
+            // Reset the flag
+            loadingForSessionFile = false;
+            
+            // Don't auto-save - user can manually save if needed
+            // saveProgress();
+            startSurveyFromSaved();
+            
+            // Restore form state if it was saved in the session file
+            if (window.pendingFormState) {
+                restoreFormState(window.pendingFormState);
+                delete window.pendingFormState;
+            }
+            
+            showAlert('Session applied! Continuing from saved position.', 'success');
+        }
+
+        // Clear saved progress
+        function clearProgress() {
+            if (confirm('Are you sure you want to clear all saved progress? This cannot be undone.')) {
+                localStorage.removeItem('imageSurveyProgress');
+                stopAutoSave();
+                showAlert('Saved progress cleared.', 'info');
+                
+                // Reset UI
+                document.getElementById('progress-info').classList.add('hidden');
+                updateSessionInfo();
+            }
+        }
+
+        // Show auto-save indicator
+        function showAutoSaveIndicator(message) {
+            const indicator = document.getElementById('auto-save-indicator');
+            indicator.textContent = message;
+            indicator.classList.remove('hidden', 'saving');
+            
+            setTimeout(() => {
+                indicator.classList.add('hidden');
+            }, 2000);
+        }
+
+        // Navigation functions
+        function goToPreviousImage() {
+            if (currentImageIndex > 0) {
+                // Save current response if any
+                const formData = getFormData();
+                if (formData) {
+                    responses.push(formData);
+                }
+                
+                    currentImageIndex--;
+                    currentIteration = 1;
+                    clearForm();
+                    updateDisplay();
+                    // Don't auto-save - user must manually save
+                    showAlert('Moved to previous file.', 'info');
+            }
+        }
+
+        function jumpToImage() {
+            const targetImage = prompt(`Enter file number (1-${imageDataUrls.length}):`);
+            if (targetImage) {
+                const imageNum = parseInt(targetImage);
+                if (imageNum >= 1 && imageNum <= imageDataUrls.length) {
+                    // Save current response if any
+                    const formData = getFormData();
+                    if (formData) {
+                        responses.push(formData);
+                    }
+                    
+                    currentImageIndex = imageNum - 1;
+                    currentIteration = 1;
+                    clearForm();
+                    updateDisplay();
+                    // Don't auto-save - user must manually save
+                    showAlert(`Jumped to file ${imageNum}.`, 'info');
+                } else {
+                    showAlert('Invalid file number.', 'warning');
+                }
+            }
+        }
+
+        // Handle image loading errors
+        function handleImageError() {
+            showAlert('Error loading current image. Please check the file.', 'warning');
+        }
+
+        // Get form data
+        function getFormData() {
+            const dataRequestRadio = document.querySelector('input[name="data_request"]:checked');
+            
+            // Validate Question 1 is answered
             if (!dataRequestRadio) {
                 showAlert('Please answer whether there is a data request.', 'warning');
                 return null;
             }
             
+            // If "No" is selected for Question 1, return NA for all other questions
+            if (dataRequestRadio.value === 'No') {
+                return {
+                    imageIndex: currentImageIndex + 1,
+                    imageName: imageFiles[currentImageIndex] ? imageFiles[currentImageIndex].name : `File_${currentImageIndex + 1}`,
+                    iteration: currentIteration,
+                    dataRequest: 'No',
+                    dataPointsProvided: 'NA',
+                    granularityMatch: 'NA',
+                    temporalGranularity: 'NA',
+                    temporalCoverage: 'NA',
+                    baselineShift: 'NA',
+                    moreData: 'NA',
+                    allVariables: 'NA',
+                    variableRedefined: 'NA',
+                    whatChanged: 'NA',
+                    allParts: 'NA',
+                    thematicAnswer: 'NA',
+                    justification: 'NA',
+                    otherNotes: 'NA',
+                    timestamp: new Date().toISOString()
+                };
+            }
+            
+            // If "Yes" is selected, validate and collect all fields
+            const dataPointsProvided = document.getElementById('data_points_provided').value.trim();
+            const granularityRadio = document.querySelector('input[name="granularity_match"]:checked');
+            const temporalGranularityRadio = document.querySelector('input[name="temporal_granularity"]:checked');
+            const temporalCoverageRadio = document.querySelector('input[name="temporal_coverage"]:checked');
+            const baselineShiftRadio = document.querySelector('input[name="baseline_shift"]:checked');
+            const moreDataRadio = document.querySelector('input[name="more_data"]:checked');
+            const allVariablesRadio = document.querySelector('input[name="all_variables"]:checked');
+            const variableRedefinedRadio = document.querySelector('input[name="variable_redefined"]:checked');
+            const whatChanged = document.getElementById('what_changed').value.trim();
+            const allPartsRadio = document.querySelector('input[name="all_parts"]:checked');
+            const thematicAnswerRadio = document.querySelector('input[name="thematic_answer"]:checked');
+            const justificationRadio = document.querySelector('input[name="justification"]:checked');
+            const otherNotes = document.getElementById('other_notes').value.trim();
+            
+            // Validate all required fields (only when data_request = Yes)
             if (!dataPointsProvided) {
                 showAlert('Please specify how many data points the government provided.', 'warning');
                 return null;
@@ -748,7 +1584,6 @@
             return {
                 imageIndex: currentImageIndex + 1,
                 imageName: imageFiles[currentImageIndex] ? imageFiles[currentImageIndex].name : `File_${currentImageIndex + 1}`,
-                fileType: fileTypes[currentImageIndex] || 'image',
                 iteration: currentIteration,
                 dataRequest: dataRequestRadio.value,
                 dataPointsProvided: dataPointsProvided,
@@ -764,7 +1599,7 @@
                 thematicAnswer: thematicAnswerRadio.value,
                 justification: justificationRadio.value,
                 otherNotes: otherNotes,
-                timestamp: new Date().toLocaleString()
+                timestamp: new Date().toISOString()
             };
         }
 
@@ -806,36 +1641,64 @@
                 radio.checked = false;
             });
             document.getElementById('other_notes').value = '';
-        }
-
-        // Repeat current image/PDF
-        function repeatImage() {
-            const formData = getFormData();
-            if (!formData) return;
             
-            responses.push(formData);
-            currentIteration++;
-            clearForm();
-            updateDisplay();
-            showAlert('Response saved! You can provide another response for this file.', 'success');
+            // Reset conditional questions visibility (show them since nothing selected)
+            handleDataRequestChange();
         }
 
-        // Move to next image
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alert-container');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertContainer.appendChild(alertDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Navigate to next image
         function nextImage() {
             const formData = getFormData();
-            if (!formData) return;
-            
-            responses.push(formData);
-            currentImageIndex++;
-            currentIteration = 1;
-            clearForm();
-            
-            if (currentImageIndex >= imageDataUrls.length) {
-                showResults();
-            } else {
-                updateDisplay();
-                showAlert('Response saved! Moving to next file.', 'success');
+            if (!formData) {
+                return;
             }
+            
+            // Move to next image
+            if (currentImageIndex < imageDataUrls.length - 1) {
+                // Save response and move to next
+                responses.push(formData);
+                currentImageIndex++;
+                currentIteration = 1;
+                clearForm();
+                updateDisplay();
+                // Don't auto-save - user must manually save
+            } else {
+                // Last file - let finishSurvey handle saving the response
+                finishSurvey();
+            }
+        }
+
+        // Repeat current image (new iteration)
+        function repeatImage() {
+            const formData = getFormData();
+            if (!formData) {
+                return;
+            }
+            
+            // Save response
+            responses.push(formData);
+            
+            // Increment iteration for same image
+            currentIteration++;
+            
+            clearForm();
+            updateDisplay();
+            // Don't auto-save - user must manually save
+            showAlert(`Starting iteration ${currentIteration} for this image.`, 'info');
         }
 
         // Finish survey
@@ -844,25 +1707,35 @@
             if (formData) {
                 responses.push(formData);
             }
-            showResults();
-        }
-
-        // Show results
-        function showResults() {
-            document.getElementById('survey-section').classList.add('hidden');
-            document.getElementById('progress').classList.add('hidden');
-            document.getElementById('results-section').classList.remove('hidden');
             
+            surveyStarted = false;
+            stopAutoSave();
+            
+            // Hide survey, show results
+            document.getElementById('survey-section').classList.add('hidden');
+            document.getElementById('results-section').classList.remove('hidden');
             document.getElementById('total-responses').textContent = responses.length;
             
-            // Create results table
+            // Display results table
+            displayResults();
+            
+            showAlert('Survey completed! Thank you for your responses.', 'success');
+        }
+
+        // Display results in table
+        function displayResults() {
+            const resultsTable = document.getElementById('results-table');
+            if (responses.length === 0) {
+                resultsTable.innerHTML = '<p>No responses collected.</p>';
+                return;
+            }
+            
             let tableHTML = `
                 <table>
                     <thead>
                         <tr>
                             <th>File #</th>
                             <th>File Name</th>
-                            <th>File Type</th>
                             <th>Response Set</th>
                             <th>Data Request?</th>
                             <th>Data Points Provided</th>
@@ -889,11 +1762,10 @@
                     <tr>
                         <td>${response.imageIndex}</td>
                         <td>${response.imageName}</td>
-                        <td>${response.fileType || 'image'}</td>
                         <td>${response.iteration}</td>
                         <td>${response.dataRequest}</td>
-                        <td>${response.dataPointsProvided}</td>
-                        <td>${response.granularityMatch}</td>
+                        <td>${response.dataPointsProvided || ''}</td>
+                        <td>${response.granularityMatch || ''}</td>
                         <td>${response.temporalGranularity || ''}</td>
                         <td>${response.temporalCoverage || ''}</td>
                         <td>${response.baselineShift || ''}</td>
@@ -905,15 +1777,13 @@
                         <td>${response.thematicAnswer || ''}</td>
                         <td>${response.justification || ''}</td>
                         <td>${response.otherNotes || ''}</td>
-                        <td>${response.timestamp}</td>
+                        <td>${new Date(response.timestamp).toLocaleString()}</td>
                     </tr>
                 `;
             });
             
             tableHTML += '</tbody></table>';
-            document.getElementById('results-table').innerHTML = tableHTML;
-            
-            showAlert('Survey completed successfully!', 'success');
+            resultsTable.innerHTML = tableHTML;
         }
 
         // Helper function to properly escape CSV values
@@ -929,23 +1799,22 @@
         // Download results as CSV
         function downloadResults() {
             if (responses.length === 0) {
-                showAlert('No data to download.', 'warning');
+                showAlert('No responses to download.', 'warning');
                 return;
             }
             
             // Create CSV content
-            const headers = ['File_Number', 'File_Name', 'File_Type', 'Response_Set', 'Data_Request', 'Data_Points_Provided', 'Granularity_Match', 'Temporal_Granularity', 'Temporal_Coverage', 'Baseline_Shift', 'More_Data', 'All_Variables', 'Variable_Redefined', 'What_Changed', 'All_Parts', 'Thematic_Answer', 'Justification', 'Other_Notes', 'Timestamp'];
+            const headers = ['File_Number', 'File_Name', 'Response_Set', 'Data_Request', 'Data_Points_Provided', 'Granularity_Match', 'Temporal_Granularity', 'Temporal_Coverage', 'Baseline_Shift', 'More_Data', 'All_Variables', 'Variable_Redefined', 'What_Changed', 'All_Parts', 'Thematic_Answer', 'Justification', 'Other_Notes', 'Timestamp'];
             let csvContent = headers.join(',') + '\n';
             
             responses.forEach(response => {
                 const row = [
-                    response.imageIndex, // Number, no quotes needed but we'll quote for consistency
+                    response.imageIndex, // Number
                     escapeCsvValue(response.imageName),
-                    escapeCsvValue(response.fileType || 'image'),
                     response.iteration, // Number
                     escapeCsvValue(response.dataRequest),
-                    escapeCsvValue(response.dataPointsProvided),
-                    escapeCsvValue(response.granularityMatch),
+                    escapeCsvValue(response.dataPointsProvided || ''),
+                    escapeCsvValue(response.granularityMatch || ''),
                     escapeCsvValue(response.temporalGranularity || ''),
                     escapeCsvValue(response.temporalCoverage || ''),
                     escapeCsvValue(response.baselineShift || ''),
@@ -967,7 +1836,7 @@
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', `survey_results_${new Date().toISOString().slice(0, 10)}.csv`);
+            link.setAttribute('download', `survey_results_${sessionId}_${new Date().toISOString().slice(0, 10)}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -978,7 +1847,7 @@
 
         // Reset survey
         function resetSurvey() {
-            if (confirm('Are you sure you want to start a new survey? This will clear all current data.')) {
+            if (confirm('Are you sure you want to start a new survey? This will clear all current progress.')) {
                 // Reset all variables
                 imageFiles = [];
                 imageDataUrls = [];
@@ -987,47 +1856,33 @@
                 currentIteration = 1;
                 responses = [];
                 surveyStarted = false;
+                loadingForSessionFile = false;
+                if (window.pendingSessionRestore) {
+                    delete window.pendingSessionRestore;
+                }
+                generateSessionId();
+                stopAutoSave();
                 
-                // Reset form
-                clearForm();
-                document.getElementById('image-files').value = '';
+                // Clear localStorage
+                localStorage.removeItem('imageSurveyProgress');
                 
-                // Show setup section, hide others
+                // Reset UI
+                document.getElementById('load-progress-section').classList.remove('hidden');
                 document.getElementById('setup-section').classList.remove('hidden');
+                document.getElementById('save-load-controls').classList.add('hidden');
                 document.getElementById('progress').classList.add('hidden');
                 document.getElementById('survey-section').classList.add('hidden');
                 document.getElementById('results-section').classList.add('hidden');
                 document.getElementById('image-list').classList.add('hidden');
                 document.getElementById('start-survey-btn').classList.add('hidden');
+                document.getElementById('progress-info').classList.add('hidden');
+                document.getElementById('image-files').value = '';
+                document.getElementById('progress-file').value = '';
                 
-                // Clear alerts
-                document.getElementById('alert-container').innerHTML = '';
-                
-                showAlert('Survey reset. Please load new files to start.', 'success');
+                clearForm();
+                showAlert('Survey reset. You can now load new images to start a fresh survey.', 'info');
             }
         }
-
-        // Show alert messages
-        function showAlert(message, type) {
-            const alertContainer = document.getElementById('alert-container');
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type}`;
-            alertDiv.textContent = message;
-            
-            alertContainer.appendChild(alertDiv);
-            
-            // Auto-remove after 5 seconds
-            setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.parentNode.removeChild(alertDiv);
-                }
-            }, 5000);
-        }
-
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            showAlert('Welcome! Please load your images or PDFs to begin the survey.', 'success');
-        });
     </script>
 </body>
 </html>
